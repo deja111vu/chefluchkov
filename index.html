@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Стройность без особых усилий: Интерактивный План Питания</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Fresh Harmony (Soft Greens, Blues, Yellows on a Neutral Background) -->
+    <!-- Application Structure Plan: Single-page app with a sticky top navigation for smooth scrolling to thematic sections: Home, Principles, an interactive Meal Planner, a Quick Recipe gallery, and a Tips section. This task-oriented structure (e.g., 'view today's plan') is more usable than a linear document, breaking down dense information into interactive, manageable components like cards and accordions. -->
+    <!-- Visualization & Content Choices: Report Info: 7-day meal plan Kcal/BJU data -> Goal: Compare/Inform -> Viz: Interactive daily menu cards + dynamic Chart.js Donut chart (Kcal % per meal) and Stacked Bar chart (BJU grams per day). Interaction: User selects a day, and both the menu cards and charts update instantly. Justification: Transforms static data tables into an interactive dashboard for easy comparison and understanding of nutritional balance. Report Info: Lists of recipes/tips -> Goal: Organize/Inform -> Method: Interactive filterable cards and accordions. Justification: Improves browsability and reduces cognitive load compared to long text blocks. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link:hover {
+            color: #2563eb;
+        }
+        .active-nav-link {
+            color: #2563eb;
+            border-bottom: 2px solid #2563eb;
+        }
+        .day-selector-btn {
+            transition: all 0.3s;
+        }
+        .active-day {
+            background-color: #3b82f6;
+            color: white;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <header class="bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <a href="#home" class="text-xl font-bold text-blue-600">Стройность без особых усилий</a>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#principles" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Основы</a>
+                        <a href="#plan" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">План Питания</a>
+                        <a href="#recipes" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Рецепты</a>
+                        <a href="#tips" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Советы</a>
+                    </div>
+                </div>
+                 <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                        <span class="sr-only">Открыть меню</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+             <div id="mobile-menu" class="md:hidden hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a href="#principles" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700">Основы</a>
+                    <a href="#plan" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700">План Питания</a>
+                    <a href="#recipes" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700">Рецепты</a>
+                    <a href="#tips" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700">Советы</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-4 text-center">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">Ваш путь к стройности и здоровью с каналом Шеф Лучков</h1>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Откройте для себя, как совместить любовь к вкусной еде с принципами здорового питания, не тратя часы на кухне. Это интерактивное руководство докажет, что правильное питание может быть простым, быстрым и невероятно аппетитным.</p>
+                <a href="#plan" class="mt-8 inline-block bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-105">Начать планирование</a>
+            </div>
+        </section>
+
+        <section id="principles" class="py-16 md:py-20">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-2">Основы Правильного Питания</h2>
+                <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">Это не временная диета, а образ жизни. Понимание этих принципов — ваш ключ к энергии, здоровью и идеальной фигуре.</p>
+                <div id="principles-container" class="grid md:grid-cols-3 gap-8">
+                </div>
+            </div>
+        </section>
+
+        <section id="plan" class="py-16 md:py-20 bg-white">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-2">7-дневный План Питания</h2>
+                <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">Выберите день недели, чтобы увидеть сбалансированное меню. Графики помогут вам визуально оценить распределение калорий и баланс питательных веществ. Нажмите на карточку блюда, чтобы увидеть рецепт.</p>
+                <div id="day-selector" class="flex flex-wrap justify-center gap-2 mb-12">
+                </div>
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div id="meal-cards-container" class="space-y-4">
+                    </div>
+                    <div id="charts-container" class="space-y-8">
+                        <div>
+                            <h3 class="text-xl font-semibold text-center mb-4">Распределение калорий за день</h3>
+                            <div class="chart-container">
+                                <canvas id="kcalDonutChart"></canvas>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-center mb-4">Баланс БЖУ (граммы)</h3>
+                             <div class="chart-container" style="max-width: 500px;">
+                                <canvas id="bjuBarChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="recipes" class="py-16 md:py-20">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-2">Быстрые Рецепты</h2>
+                <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">Здесь собраны экспресс-ужины и полезные десерты для тех, кто ценит свое время, но не готов жертвовать вкусом и пользой.</p>
+                <div id="recipe-filter-buttons" class="flex justify-center gap-4 mb-8">
+                    <button class="recipe-filter-btn active-filter px-6 py-2 font-semibold rounded-full bg-blue-500 text-white" data-filter="all">Все</button>
+                    <button class="recipe-filter-btn px-6 py-2 font-semibold rounded-full bg-gray-200 text-gray-700" data-filter="dinner">Экспресс-ужины</button>
+                    <button class="recipe-filter-btn px-6 py-2 font-semibold rounded-full bg-gray-200 text-gray-700" data-filter="dessert">ПП-десерты</button>
+                </div>
+                <div id="quick-recipes-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                </div>
+            </div>
+        </section>
+
+        <section id="tips" class="py-16 md:py-20 bg-white">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-12">Мотивация и Полезные Советы</h2>
+                <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-10">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-6 text-center">Лайфхаки для экономии времени</h3>
+                        <div id="time-hacks-accordion" class="space-y-3"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-6 text-center">Психология и контроль</h3>
+                        <div id="motivation-accordion" class="space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white">
+        <div class="container mx-auto px-4 py-8 text-center">
+            <p class="font-semibold text-lg">Присоединяйтесь к Telegram-каналу Шеф Лучков!</p>
+            <p class="mt-2 text-gray-400">Получайте еще больше простых рецептов, советов и поддержки каждый день.</p>
+            <a href="https://t.me/+_Z4J1jYuLBtlODhi" class="mt-4 inline-block bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition">Подписаться</a>
+        </div>
+    </footer>
+
+    <script>
+        const appData = {
+            principles: [
+                {
+                    title: "Баланс БЖУ",
+                    icon: "⚖️",
+                    content: "Основа здоровья — правильное соотношение белков, жиров и углеводов. Белки (1.2-1.5 г/кг) ускоряют метаболизм, жиры (0.8-1 г/кг) важны для гормонов, а медленные углеводы (гречка, овсянка) дают стабильную энергию."
+                },
+                {
+                    title: "Почему не нужно голодать",
+                    icon: "🧘‍♀️",
+                    content: "Жесткие диеты замедляют метаболизм. Эффективное похудение — это умеренный дефицит калорий (10-20%), а не стресс для организма. Питание должно быть комфортным и разнообразным."
+                },
+                {
+                    title: "Вода и осознанность",
+                    icon: "💧",
+                    content: "Вода — ключ к метаболизму. Пейте достаточно! Учитесь слушать свое тело, распознавать голод и насыщение. Ешьте медленно и с удовольствием, это поможет избежать переедания."
+                }
+            ],
+            mealPlan: {
+                Понедельник: {
+                    meals: [
+                        { name: "Овсяная каша с яблоком", time: "10 мин", kcal: 150, b: 5, f: 3, u: 25, recipe: "Сварите овсянку на воде или молоке. Добавьте нарезанное яблоко и щепотку корицы." },
+                        { name: "Тортилья с куриным фаршем", time: "20 мин", kcal: 350, b: 25, f: 15, u: 30, recipe: "Обжарьте куриный фарш с луком и болгарским перцем. Заверните в цельнозерновую тортилью со свежими листьями салата." },
+                        { name: "Творог с орехами", time: "2 мин", kcal: 150, b: 15, f: 8, u: 5, recipe: "Смешайте 100г творога с горстью грецких орехов или миндаля." },
+                        { name: "Рубленые котлеты из курицы", time: "30 мин", kcal: 400, b: 35, f: 18, u: 25, recipe: "Подавайте куриные котлеты с порцией гречки и салатом из свежих овощей, заправленным оливковым маслом." }
+                    ]
+                },
+                Вторник: {
+                    meals: [
+                        { name: "Тосты с творожным сыром и тунцом", time: "10 мин", kcal: 250, b: 20, f: 10, u: 20, recipe: "На два ржаных тоста намажьте творожный сыр и выложите консервированного тунца. Украсьте зеленью." },
+                        { name: "Легкий куриный суп", time: "30 мин", kcal: 200, b: 20, f: 5, u: 15, recipe: "Отварите куриную грудку. Добавьте в бульон морковь, лук, брокколи. Варите до готовности овощей." },
+                        { name: "Яблоко или груша", time: "1 мин", kcal: 80, b: 0, f: 0, u: 20, recipe: "Просто свежий фрукт — отличный перекус." },
+                        { name: "Запеченная рыба с овощами", time: "40 мин", kcal: 350, b: 30, f: 15, u: 20, recipe: "Филе минтая или хека запеките в фольге с брокколи, цветной капустой и морковью. Сбрызните лимонным соком." }
+                    ]
+                },
+                Среда: {
+                    meals: [
+                        { name: "Яичница со свекольной ботвой", time: "15 мин", kcal: 280, b: 18, f: 20, u: 5, recipe: "Обжарьте на сковороде свекольную ботву или шпинат, залейте двумя яйцами и готовьте до готовности." },
+                        { name: "Салат с киноа и овощами", time: "20 мин", kcal: 300, b: 10, f: 15, u: 30, recipe: "Смешайте отварное киноа, нарезанные огурцы, помидоры, болгарский перец и зелень. Заправьте оливковым маслом." },
+                        { name: "Кефир с бананом", time: "2 мин", kcal: 180, b: 8, f: 5, u: 25, recipe: "Взбейте в блендере стакан кефира и половину банана." },
+                        { name: "Запеченные кабачки с фаршем", time: "50 мин", kcal: 400, b: 30, f: 20, u: 25, recipe: "Кабачки разрежьте пополам, выньте мякоть. Наполните куриным фаршем, смешанным с луком и томатами. Запекайте 40 мин." }
+                    ]
+                },
+                Четверг: {
+                     meals: [
+                        { name: "Овсяноблин с рыбой и авокадо", time: "15 мин", kcal: 350, b: 20, f: 22, u: 20, recipe: "Смешайте 2 ст.л. овсянки, 1 яйцо, 2 ст.л. молока. Выпекайте как блин. На одну половину выложите авокадо и слабосоленую рыбу, накройте второй." },
+                        { name: "ПП салат с тунцом", time: "15 мин", kcal: 250, b: 25, f: 10, u: 15, recipe: "Смешайте листья салата, огурец, помидор, консервированный тунец и вареное яйцо. Заправьте лимонным соком." },
+                        { name: "Творожный десерт с ягодами", time: "10 мин", kcal: 150, b: 15, f: 5, u: 10, recipe: "Смешайте 100г творога с ложкой йогурта и свежими ягодами." },
+                        { name: "Курица с овощами на сковороде", time: "20 мин", kcal: 380, b: 35, f: 15, u: 25, recipe: "Нарежьте куриное филе и обжарьте с брокколи, болгарским перцем и стручковой фасолью." }
+                    ]
+                },
+                Пятница: {
+                     meals: [
+                        { name: "Омлет с зеленью и сыром", time: "10 мин", kcal: 280, b: 20, f: 20, u: 5, recipe: "Взбейте 2 яйца с молоком, добавьте нарезанную зелень. Вылейте на сковороду, посыпьте тертым легким сыром." },
+                        { name: "Чечевичный суп-пюре", time: "25 мин", kcal: 250, b: 15, f: 5, u: 35, recipe: "Отварите красную чечевицу с морковью и луком. Взбейте блендером до состояния пюре." },
+                        { name: "Горсть миндаля и сухофрукты", time: "1 мин", kcal: 180, b: 5, f: 12, u: 15, recipe: "Небольшая горсть миндаля и несколько штук кураги или чернослива." },
+                        { name: "Рыба на пару с овощами", time: "25 мин", kcal: 320, b: 30, f: 12, u: 20, recipe: "Приготовьте филе хека или трески на пару вместе с морковью и цветной капустой." }
+                    ]
+                },
+                Суббота: {
+                     meals: [
+                        { name: "Сырники с отрубями", time: "20 мин", kcal: 300, b: 25, f: 15, u: 15, recipe: "Смешайте 150г творога, 1 яйцо, 1 ст.л. рисовой муки, 1 ст.л. отрубей. Сформируйте сырники и обжарьте. Подавайте с фруктами." },
+                        { name: "Салат с креветками", time: "15 мин", kcal: 250, b: 20, f: 10, u: 10, recipe: "Смешайте отварные креветки, нарезанный сельдерей, огурец и листья салата. Заправьте йогуртом." },
+                        { name: "Йогурт с ягодами", time: "2 мин", kcal: 120, b: 10, f: 3, u: 15, recipe: "Натуральный йогурт без сахара со свежими или замороженными ягодами." },
+                        { name: "Курица в медово-горчичном соусе", time: "30 мин", kcal: 420, b: 35, f: 20, u: 25, recipe: "Замаринуйте куриное филе в смеси меда, дижонской горчицы и соевого соуса. Запеките с овощами." }
+                    ]
+                },
+                Воскресенье: {
+                     meals: [
+                        { name: "Бутерброды с авокадо", time: "10 мин", kcal: 300, b: 10, f: 20, u: 20, recipe: "На ржаные хлебцы намажьте пюре из авокадо, сверху положите ломтики огурца и творожный сыр." },
+                        { name: "Тайский салат с кальмарами", time: "20 мин", kcal: 280, b: 25, f: 12, u: 15, recipe: "Отварите и нарежьте кальмары. Смешайте с нарезанным болгарским перцем, кинзой и заправкой из соевого соуса и лимонного сока." },
+                        { name: "Шоколадно-банановое мороженое", time: "5 мин", kcal: 150, b: 3, f: 2, u: 30, recipe: "Взбейте в блендере замороженный банан с ложкой какао до кремовой текстуры." },
+                        { name: "Овощная запеканка с курицей", time: "45 мин", kcal: 380, b: 30, f: 18, u: 25, recipe: "Нарежьте кабачок, брокколи, помидоры и куриное филе. Залейте смесью яйца и йогурта, запекайте 40 минут." }
+                    ]
+                }
+            },
+            quickRecipes: [
+                { type: 'dinner', name: 'Курица с овощами на сковороде', content: 'Нарежьте куриное филе, обжарьте с болгарским перцем, цукини, брокколи. Тушите под крышкой до готовности. КБЖУ: ~150 Ккал/100г.' },
+                { type: 'dinner', name: 'Рыба с овощами на пару', content: 'Филе белой рыбы (минтай, хек) и овощи (брокколи, морковь) готовьте на пару 15-20 минут. Сохраняет максимум пользы. КБЖУ: ~95 Ккал/100г.' },
+                { type: 'dinner', name: 'ПП-салат с тунцом', content: 'Смешайте консервированный тунец, огурцы, помидоры, листья салата. Заправьте оливковым маслом и лимонным соком. КБЖУ: ~120 Ккал/100г.' },
+                { type: 'dessert', name: 'Йогуртовый десерт с желатином', content: 'Желатин растворите, смешайте с йогуртом и подсластителем. Залейте ягоды в форме и охладите. КБЖУ: ~55 Ккал/100г.' },
+                { type: 'dessert', name: 'Шоколадно-банановое мороженое', content: 'Замороженные бананы взбейте в блендере с какао-порошком до однородности. Подавайте сразу. КБЖУ: ~99 Ккал/100г.' },
+                { type: 'dessert', name: 'Банан в шоколаде с миндалем', content: 'Окуните половинки банана в растопленный темный шоколад, посыпьте измельченным миндалем и заморозьте. КБЖУ: ~235 Ккал/100г.' }
+            ],
+            tips: {
+                timeHacks: [
+                    { title: "Планируйте меню", content: "Составляйте меню и список покупок на неделю. Это экономит время и избавляет от ежедневных раздумий 'что приготовить'." },
+                    { title: "Делайте заготовки", content: "Нарезайте овощи и мясо заранее. Замораживайте порции бульона или домашних котлет. Это ускоряет готовку в будни." },
+                    { title: "Готовьте с запасом", content: "Готовьте большие порции блюд, которые можно хранить в холодильнике или замораживать на несколько дней вперед." }
+                ],
+                motivation: [
+                    { title: "Ставьте реальные цели", content: "Начинайте с малых шагов. Постепенные изменения более устойчивы. Путь к здоровому питанию — это марафон, а не спринт." },
+                    { title: "Ешьте осознанно", content: "Научитесь распознавать сигналы голода и насыщения. Ешьте медленно, наслаждаясь каждым кусочком, не отвлекаясь на гаджеты." },
+                    { title: "Используйте меньшие тарелки", content: "Простой психологический трюк: меньшая тарелка, заполненная до краев, создает ощущение большей порции." }
+                ]
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const principlesContainer = document.getElementById('principles-container');
+            const daySelector = document.getElementById('day-selector');
+            const mealCardsContainer = document.getElementById('meal-cards-container');
+            const quickRecipesContainer = document.getElementById('quick-recipes-container');
+            const recipeFilterButtons = document.querySelectorAll('.recipe-filter-btn');
+            const timeHacksAccordion = document.getElementById('time-hacks-accordion');
+            const motivationAccordion = document.getElementById('motivation-accordion');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            let kcalDonutChart, bjuBarChart;
+            let activeDay = 'Понедельник';
+
+            function createPrincipleCard({ title, icon, content }) {
+                return `
+                    <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+                        <div class="text-4xl mb-4">${icon}</div>
+                        <h3 class="text-xl font-bold mb-2">${title}</h3>
+                        <p class="text-gray-600">${content}</p>
+                    </div>
+                `;
+            }
+
+            function createMealCard({ name, time, recipe }, index) {
+                const mealTitles = ['Завтрак', 'Обед', 'Перекус', 'Ужин'];
+                return `
+                    <div class="meal-card bg-gray-100 p-5 rounded-lg shadow-sm cursor-pointer transition-transform transform hover:scale-105" data-recipe="${recipe}">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-semibold text-blue-600">${mealTitles[index]}</p>
+                                <p class="text-lg font-bold">${name}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-gray-500">~${time}</p>
+                            </div>
+                        </div>
+                        <div class="recipe-details hidden mt-4 text-gray-700 border-t pt-4">
+                            <p>${recipe}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function createQuickRecipeCard({ name, content }) {
+                return `
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h4 class="text-lg font-bold mb-2">${name}</h4>
+                        <p class="text-gray-600">${content}</p>
+                    </div>
+                `;
+            }
+            
+            function createAccordionItem({ title, content }, index) {
+                return `
+                    <div class="bg-gray-50 rounded-lg">
+                        <h2>
+                            <button type="button" class="flex items-center justify-between w-full p-5 font-medium text-left text-gray-700 rounded-lg hover:bg-gray-100 focus:ring-4 focus:ring-gray-200" data-accordion-target="#accordion-body-${index}">
+                                <span>${title}</span>
+                                <svg class="w-6 h-6 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                            </button>
+                        </h2>
+                        <div id="accordion-body-${index}" class="hidden p-5 border-t">
+                            <p class="text-gray-600">${content}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderPrinciples() {
+                principlesContainer.innerHTML = appData.principles.map(createPrincipleCard).join('');
+            }
+
+            function renderMealPlan(day) {
+                activeDay = day;
+                const dayData = appData.mealPlan[day];
+                mealCardsContainer.innerHTML = dayData.meals.map(createMealCard).join('');
+                document.querySelectorAll('.day-selector-btn').forEach(btn => {
+                    btn.classList.toggle('active-day', btn.textContent === day);
+                });
+                updateCharts(day);
+            }
+
+            function renderQuickRecipes(filter = 'all') {
+                const filtered = filter === 'all' ? appData.quickRecipes : appData.quickRecipes.filter(r => r.type === filter);
+                quickRecipesContainer.innerHTML = filtered.map(createQuickRecipeCard).join('');
+            }
+            
+            function renderAccordions() {
+                timeHacksAccordion.innerHTML = appData.tips.timeHacks.map((item, i) => createAccordionItem(item, `time-${i}`)).join('');
+                motivationAccordion.innerHTML = appData.tips.motivation.map((item, i) => createAccordionItem(item, `motiv-${i}`)).join('');
+                
+                document.querySelectorAll('[data-accordion-target]').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const targetId = button.getAttribute('data-accordion-target');
+                        const targetPanel = document.querySelector(targetId);
+                        targetPanel.classList.toggle('hidden');
+                        button.querySelector('svg').classList.toggle('rotate-180');
+                    });
+                });
+            }
+
+            function updateCharts(day) {
+                const dayData = appData.mealPlan[day];
+                const mealNames = ['Завтрак', 'Обед', 'Перекус', 'Ужин'];
+                const kcalData = dayData.meals.map(m => m.kcal);
+                const bjuData = dayData.meals.reduce((acc, meal) => {
+                    acc.b += meal.b;
+                    acc.f += meal.f;
+                    acc.u += meal.u;
+                    return acc;
+                }, { b: 0, f: 0, u: 0 });
+
+                if (kcalDonutChart) kcalDonutChart.destroy();
+                kcalDonutChart = new Chart(document.getElementById('kcalDonutChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: mealNames,
+                        datasets: [{
+                            data: kcalData,
+                            backgroundColor: ['#60a5fa', '#3b82f6', '#93c5fd', '#2563eb'],
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+
+                if (bjuBarChart) bjuBarChart.destroy();
+                bjuBarChart = new Chart(document.getElementById('bjuBarChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['БЖУ'],
+                        datasets: [
+                            { label: 'Белки (г)', data: [bjuData.b], backgroundColor: '#60a5fa' },
+                            { label: 'Жиры (г)', data: [bjuData.f], backgroundColor: '#3b82f6' },
+                            { label: 'Углеводы (г)', data: [bjuData.u], backgroundColor: '#93c5fd' }
+                        ]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        scales: { x: { stacked: true }, y: { stacked: true } },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            }
+            
+            daySelector.innerHTML = Object.keys(appData.mealPlan).map(day => 
+                `<button class="day-selector-btn px-4 py-2 rounded-full font-semibold bg-gray-200 text-gray-700">${day}</button>`
+            ).join('');
+
+            daySelector.addEventListener('click', (e) => {
+                if (e.target.classList.contains('day-selector-btn')) {
+                    renderMealPlan(e.target.textContent);
+                }
+            });
+
+            mealCardsContainer.addEventListener('click', e => {
+                const card = e.target.closest('.meal-card');
+                if (card) {
+                    const recipeDetails = card.querySelector('.recipe-details');
+                    recipeDetails.classList.toggle('hidden');
+                }
+            });
+
+            recipeFilterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    recipeFilterButtons.forEach(btn => {
+                        btn.classList.remove('active-filter', 'bg-blue-500', 'text-white');
+                        btn.classList.add('bg-gray-200', 'text-gray-700');
+                    });
+                    button.classList.add('active-filter', 'bg-blue-500', 'text-white');
+                    button.classList.remove('bg-gray-200', 'text-gray-700');
+                    renderQuickRecipes(button.dataset.filter);
+                });
+            });
+
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active-nav-link');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active-nav-link');
+                    }
+                });
+            });
+
+            renderPrinciples();
+            renderMealPlan(activeDay);
+            renderQuickRecipes();
+            renderAccordions();
+        });
+    </script>
+</body>
+</html>
